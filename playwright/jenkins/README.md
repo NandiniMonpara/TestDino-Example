@@ -1,22 +1,24 @@
-# Playwright + TestDino for Jenkins
+# TestDino - Jenkins Playwright Example
 
-This example runs Playwright in Jenkins and uploads the report to TestDino with the exact command below.
+This is an example project that shows how to run Playwright tests on Jenkins with 4 shards and upload the merged report to TestDino.
 
-```bash
-npx tdpw upload ./playwright-report --token="YOUR_NEW_TOKEN"
-```
+The example pipeline:
 
-## What to do
+- installs dependencies and Playwright browsers
+- runs Playwright tests in 4 parallel shards
+- stores blob reports from each shard
+- merges the shard reports into `playwright-report/report.json`
+- uploads the merged report to TestDino
 
-1. Copy this folder into the root of the repository where you want to run Playwright.
-2. Create a Jenkins secret text credential with the ID `TESTDINO_API_KEY`.
-3. Run the pipeline.
+Create a Jenkins secret text credential with ID `TESTDINO_TOKEN`.
 
-## Local run
+Copy this folder into the root of your repository and keep `Jenkinsfile` at the repository root.
+
+Local commands:
 
 ```bash
 npm ci
 npx playwright install
 npx playwright test
-npx tdpw upload ./playwright-report --token="YOUR_NEW_TOKEN"
+npx tdpw upload ./playwright-report --token="YOUR_TESTDINO_TOKEN"
 ```

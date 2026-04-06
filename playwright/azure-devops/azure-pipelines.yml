@@ -8,51 +8,95 @@ pr:
     include:
       - main
 
-pool:
-  vmImage: ubuntu-latest
-
 variables:
   CI: "true"
 
-steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: "20.x"
-    displayName: Install Node.js
+stages:
+  - stage: Test
+    jobs:
+      - job: Playwright
+        pool:
+          vmImage: ubuntu-latest
+        strategy:
+          matrix:
+            shard1:
+              SHARD: 1/4
+            shard2:
+              SHARD: 2/4
+            shard3:
+              SHARD: 3/4
+            shard4:
+              SHARD: 4/4
+        steps:
+          - checkout: self
 
-  - script: npm ci
-    displayName: Install dependencies
+          - task: NodeTool@0
+            inputs:
+              versionSpec: "20.x"
+            displayName: Install Node.js
 
-  - script: npx playwright install --with-deps
-    displayName: Install Playwright browsers
+          - script: npm ci
+            displayName: Install dependencies
 
-  - script: npx playwright test
-    displayName: Run Playwright tests
+          - script: npx playwright install --with-deps
+            displayName: Install Playwright browsers
 
-  - script: npx tdpw upload ./playwright-report --token="$(TESTDINO_API_KEY)"
-    displayName: Upload results to TestDino
+          - script: npx playwright test --shard=$(SHARD)
+            displayName: Run Playwright shard $(SHARD)
 
-  - task: PublishTestResults@2
+          - task: PublishTestResults@2
+            condition: always()
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: test-results/junit.xml
+              mergeTestResults: false
+              testRunTitle: Playwright shard $(SHARD)
+            displayName: Publish shard test results
+
+          - task: PublishPipelineArtifact@1
+            condition: always()
+            inputs:
+              targetPath: blob-report
+              artifact: blob-report-$(System.JobPositionInPhase)
+              publishLocation: pipeline
+            displayName: Publish shard blob report
+
+  - stage: MergeAndUpload
+    dependsOn: Test
     condition: always()
-    inputs:
-      testResultsFormat: JUnit
-      testResultsFiles: test-results/junit.xml
-      mergeTestResults: true
-      testRunTitle: Playwright Tests
-    displayName: Publish test results
+    jobs:
+      - job: MergeAndUpload
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - checkout: self
 
-  - task: PublishPipelineArtifact@1
-    condition: always()
-    inputs:
-      targetPath: playwright-report
-      artifact: playwright-report
-      publishLocation: pipeline
-    displayName: Publish Playwright HTML report
+          - task: NodeTool@0
+            inputs:
+              versionSpec: "20.x"
+            displayName: Install Node.js
 
-  - task: PublishPipelineArtifact@1
-    condition: always()
-    inputs:
-      targetPath: test-results
-      artifact: test-results
-      publishLocation: pipeline
-    displayName: Publish Playwright test results
+          - script: npm ci
+            displayName: Install dependencies
+
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              patterns: "blob-report-*/*"
+              path: all-blob-reports
+            displayName: Download blob reports
+
+          - script: |
+              mkdir -p playwright-report
+              npx playwright merge-reports --reporter=json ./all-blob-reports > playwright-report/report.json
+            displayName: Merge Playwright reports to JSON
+
+          - script: npx tdpw upload ./playwright-report --token="$(TESTDINO_TOKEN)"
+            displayName: Upload results to TestDino
+
+          - task: PublishPipelineArtifact@1
+            condition: always()
+            inputs:
+              targetPath: playwright-report
+              artifact: playwright-report
+              publishLocation: pipeline
+            displayName: Publish merged Playwright report

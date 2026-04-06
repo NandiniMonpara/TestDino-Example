@@ -9,8 +9,21 @@ phases:
       - npx playwright install --with-deps
   build:
     commands:
-      - npx playwright test
-      - npx tdpw upload ./playwright-report --token="$TESTDINO_API_KEY"
+      - rm -rf all-blob-reports playwright-report blob-report
+      - |
+        TEST_EXIT_CODE=0
+        for SHARD in 1 2 3 4; do
+          mkdir -p "all-blob-reports/shard-$SHARD"
+          npx playwright test --shard=$SHARD/4 || TEST_EXIT_CODE=1
+          if [ -d blob-report ]; then
+            cp -R blob-report/. "all-blob-reports/shard-$SHARD/"
+          fi
+          rm -rf blob-report
+        done
+        mkdir -p playwright-report
+        npx playwright merge-reports --reporter=json ./all-blob-reports > playwright-report/report.json
+        npx tdpw upload ./playwright-report --token="$TESTDINO_TOKEN"
+        test $TEST_EXIT_CODE -eq 0
 
 artifacts:
   files:

@@ -1,22 +1,26 @@
-# Playwright + TestDino for AWS CodeBuild
+# TestDino - AWS CodeBuild Playwright Example
 
-This example runs Playwright in AWS CodeBuild and uploads the report to TestDino with the exact command below.
+This is an example project that shows how to run Playwright tests on AWS CodeBuild with 4 shard passes and upload the merged report to TestDino.
 
-```bash
-npx tdpw upload ./playwright-report --token="YOUR_NEW_TOKEN"
-```
+The example build:
 
-## What to do
+- installs dependencies and Playwright browsers
+- runs Playwright tests in 4 shard passes
+- stores blob reports from each shard pass
+- merges the shard reports into `playwright-report/report.json`
+- uploads the merged report to TestDino
 
-1. Copy this folder into the root of the repository where you want to run Playwright.
-2. Add an environment variable named `TESTDINO_API_KEY` to the CodeBuild project.
-3. Run the build.
+Set the `TESTDINO_TOKEN` environment variable in CodeBuild.
 
-## Local run
+Get your token from [testdino](https://app.testdino.com).
+
+Copy this folder into the root of your repository and keep `buildspec.yml` at the repository root unless you configure a custom buildspec path.
+
+Local commands:
 
 ```bash
 npm ci
 npx playwright install
 npx playwright test
-npx tdpw upload ./playwright-report --token="YOUR_NEW_TOKEN"
+npx tdpw upload ./playwright-report --token="YOUR_TESTDINO_TOKEN"
 ```

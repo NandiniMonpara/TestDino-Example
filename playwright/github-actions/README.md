@@ -1,22 +1,26 @@
-# Playwright + TestDino for GitHub Actions
+# TestDino - GitHub Actions Playwright Example
 
-This example runs Playwright in GitHub Actions and uploads the report to TestDino with the exact command below.
+This is an example project that shows how to run Playwright tests on GitHub Actions with 4 shards and upload the merged report to TestDino.
 
-```bash
-npx tdpw upload ./playwright-report --token="YOUR_NEW_TOKEN"
-```
+The example workflow:
 
-## What to do
+- installs dependencies and Playwright browsers
+- runs Playwright tests in 4 shards
+- uploads blob reports from each shard
+- merges the shard reports into `playwright-report/report.json`
+- uploads the merged report to TestDino
 
-1. Copy this folder into the root of the repository where you want to run Playwright.
-2. Add a GitHub Actions secret named `TESTDINO_API_KEY`.
-3. Push a commit or run the workflow manually.
+Set the `TESTDINO_TOKEN` GitHub Actions secret.
 
-## Local run
+Get your token from [testdino](https://app.testdino.com).
+
+Copy this folder into the root of your repository and keep `.github/workflows/playwright.yml` in the same location.
+
+Local commands:
 
 ```bash
 npm ci
 npx playwright install
 npx playwright test
-npx tdpw upload ./playwright-report --token="YOUR_NEW_TOKEN"
+npx tdpw upload ./playwright-report --token="YOUR_TESTDINO_TOKEN"
 ```

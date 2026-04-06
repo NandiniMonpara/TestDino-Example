@@ -2,23 +2,41 @@ image: mcr.microsoft.com/playwright:v1.59.1-noble
 
 stages:
   - test
+  - report
 
 variables:
   CI: "true"
 
 playwright:
   stage: test
+  parallel: 4
   script:
     - npm ci
-    - npx playwright test
-    - npx tdpw upload ./playwright-report --token="$TESTDINO_API_KEY"
+    - npx playwright test --shard=$CI_NODE_INDEX/$CI_NODE_TOTAL
   artifacts:
     when: always
     paths:
-      - playwright-report/
+      - blob-report/
       - test-results/
     expire_in: 14 days
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "web"
+
+merge-report:
+  stage: report
+  needs:
+    - job: playwright
+      artifacts: true
+  script:
+    - npm ci
+    - mkdir -p merged-blob-reports playwright-report
+    - find . -type f -path "*/blob-report/*.zip" -exec cp {} merged-blob-reports/ \;
+    - npx playwright merge-reports --reporter=json ./merged-blob-reports > playwright-report/report.json
+    - npx tdpw upload ./playwright-report --token="$TESTDINO_TOKEN"
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+    expire_in: 14 days

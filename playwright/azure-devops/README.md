@@ -1,22 +1,26 @@
-# Playwright + TestDino for Azure DevOps
+# TestDino - Azure DevOps Playwright Example
 
-This example runs Playwright in Azure DevOps and uploads the report to TestDino with the exact command below.
+This is an example project that shows how to run Playwright tests on Azure DevOps with 4 shards and upload the merged report to TestDino.
 
-```bash
-npx tdpw upload ./playwright-report --token="YOUR_NEW_TOKEN"
-```
+The example pipeline:
 
-## What to do
+- installs dependencies and Playwright browsers
+- runs Playwright tests in 4 matrix shards
+- stores blob reports from each shard
+- merges the shard reports into `playwright-report/report.json`
+- uploads the merged report to TestDino
 
-1. Copy this folder into the root of the repository where you want to run Playwright.
-2. Add a secret pipeline variable named `TESTDINO_API_KEY`.
-3. Run the pipeline.
+Set the `TESTDINO_TOKEN` secret pipeline variable.
 
-## Local run
+Get your token from [testdino](https://app.testdino.com).
+
+Copy this folder into the root of your repository and keep `azure-pipelines.yml` at the repository root.
+
+Local commands:
 
 ```bash
 npm ci
 npx playwright install
 npx playwright test
-npx tdpw upload ./playwright-report --token="YOUR_NEW_TOKEN"
+npx tdpw upload ./playwright-report --token="YOUR_TESTDINO_TOKEN"
 ```

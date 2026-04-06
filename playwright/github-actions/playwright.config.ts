@@ -10,12 +10,17 @@ export default defineConfig({
   workers: isCI ? 1 : undefined,
   timeout: 30_000,
   outputDir: 'test-results',
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['json', { outputFile: 'playwright-report/report.json' }],
-    ['junit', { outputFile: 'test-results/junit.xml' }],
-  ],
+  reporter: isCI
+    ? [
+        ['blob', { outputDir: 'blob-report' }],
+        ['junit', { outputFile: 'test-results/junit.xml' }],
+      ]
+    : [
+        ['list'],
+        ['html', { outputFolder: 'playwright-report', open: 'never' }],
+        ['json', { outputFile: 'playwright-report/report.json' }],
+        ['junit', { outputFile: 'test-results/junit.xml' }],
+      ],
   use: {
     baseURL: 'https://storedemo.testdino.com',
     headless: true,
