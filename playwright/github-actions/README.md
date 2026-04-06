@@ -24,3 +24,16 @@ npx playwright install
 npx playwright test
 npx tdpw upload ./playwright-report --token="YOUR_TESTDINO_TOKEN"
 ```
+
+## Sample tests included
+
+This example includes multiple test files so shard-based CI examples actually distribute work.
+
+The sample suite includes:
+
+- passing tests across multiple spec files
+- one skipped test for reporting coverage
+- one expected-failure test using `test.fail()` for reporting coverage
+
+The skipped and expected-failure tests are intentional example cases. They are included to show richer reporting behavior without making the pipeline genuinely flaky.
+
